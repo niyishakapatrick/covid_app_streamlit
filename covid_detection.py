@@ -102,15 +102,15 @@ with model_inference:
         predicted_label = predicted_idx.item()
         
         # Define the class labels
-        classes = ['COVID-19', 'Normal']
+        classes = ['Normal', 'COVID-19']
         
         # Get the predicted label and probabilities
         predicted_class = classes[predicted_label]
         probabilities = torch.softmax(output, dim=1)
-        prob_covid = probabilities[0][0].item()
-        prob_normal = probabilities[0][1].item()
+        prob_normal = probabilities[0][0].item()  # Probability of 'Normal' (class 0)
+        prob_covid = probabilities[0][1].item()   # Probability of 'COVID-19' (class 1)
         
-        return predicted_class, prob_covid, prob_normal
+        return predicted_class,prob_normal,prob_covid
 
     def upload_image():
         # Upload and display the image
@@ -127,7 +127,7 @@ with model_inference:
             if predicted_class_xray == '1_chest_xray':
                 st.write("The uploaded image is  a chest X-ray.")
                 # Perform inference on the image
-                predicted_class_covid, prob_covid, prob_normal = perform_inference(image)
+                predicted_class_covid,  prob_normal, prob_covid = perform_inference(image)
 
                 # Get image dimensions
                 width, height = image.size
@@ -135,21 +135,22 @@ with model_inference:
                 # Display the image and inference results
                 st.image(image, caption="Uploaded Image", width=300)
                 # Convert probabilities to percentages
-                prob_covid_percent = prob_covid * 100
                 prob_normal_percent = prob_normal * 100
+                prob_covid_percent = prob_covid * 100
+                
 
                 # Plot the probabilities
-                labels = ['COVID-19', 'Normal']
-                probabilities = [prob_covid_percent, prob_normal_percent]
-                colors = ['red', 'blue']
+                labels = ['Normal','COVID-19']
+                probabilities = [prob_normal_percent,prob_covid_percent]
+                colors = ['blue','red']
 
                 # Write details to CSV file
                 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 data = {
                     'Image Name': [uploaded_image.name],
                     'Chest X-ray': [True],
-                    'COVID-19 prob.': [prob_covid_percent],
                     'Normal prob.': [prob_normal_percent],
+                    'COVID-19 prob.': [prob_covid_percent],
                     'Timestamp': [current_time]
                 }
                 df = pd.DataFrame(data)
